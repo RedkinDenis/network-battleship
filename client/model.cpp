@@ -1,30 +1,52 @@
-#include "./model.h"
+#include "./model.hpp"
+#include <QMessageBox>
 
-Model::Model()
+Model::Model() :
+    state_(ST_GAME_NSTARTED)
 {
-    myField_ = new Field();
-//    state_ = ST_PLACING_SHIPS;
+    myField_    = new Field();
+    enemyField_ = new Field();
 }
 
 Model::~Model()
 {
     if (myField_)
         delete myField_;
+
+    if (enemyField_)
+        delete enemyField_;
+
+    updateState(ST_GAME_FINISHED);
 }
 
-Cell Model::getMyCell(int x, int y) const
+CellDraw Model::getMyCell(int x, int y) const
 {
     return myField_->getCell(x, y);
 }
 
-void Model::setMyCell(int x, int y, Cell cell)
+CellDraw Model::getEnemyCell(int x, int y) const
 {
-    myField_->setCell(x, y, cell);
+    return enemyField_->getCell(x, y);
+}
+
+void Model::setMyDrawCell(int x, int y, CellDraw cell)
+{
+    myField_->setDrawCell(x, y, cell);
+}
+
+void Model::setMyStateCell(int x, int y, CellState cell)
+{
+    myField_->setStateCell(x, y, cell);
+}
+
+void Model::setEnemyCell(int x, int y, CellDraw cell)
+{
+    enemyField_->setDrawCell(x, y, cell);
 }
 
 QString Model::getMyFieldStr() const
 {
-    return myField_->getFieldStr();
+    return myField_->getStateFieldStr();
 }
 
 Field Model::getMyField() const
@@ -32,14 +54,34 @@ Field Model::getMyField() const
     return *myField_;
 }
 
-void Model::setMyField(QVector<Cell> field)
+Field Model::getEnemyField() const
 {
-    myField_->setField(field);
+    return *enemyField_;
+}
+
+void Model::setMyField(QVector<CellDraw> field)
+{
+    myField_->setDrawField(field);
+}
+
+void Model::setMyField(QVector<CellState> field)
+{
+    myField_->setStateField(field);
 }
 
 void Model::setMyField(QString field)
 {
-    myField_->setField(field);
+    myField_->setStateField(field);
+}
+
+void Model::initMyDrawField()
+{
+    myField_->initMyDrawField();
+}
+
+void Model::clearMyField()
+{
+    myField_->clear();
 }
 
 ModelState Model::getState() const
@@ -47,9 +89,60 @@ ModelState Model::getState() const
     return state_;
 }
 
-void Model::setState(ModelState state)
+void Model::updateMyFieldDraw(QVector<CellDraw>& field)
 {
+//    QVector<CellDraw> updatedField;
+    myField_->setDrawField(field);
+}
+
+void Model::updateEnemyFieldDraw(QVector<CellDraw>& field)
+{
+    QVector<CellDraw> updatedField = enemyField_->getDrawField();
+    int area = updatedField.size();
+
+    for (int i = 0; i < area; i++)
+    {
+//        CellDraw resultingCell;
+
+        if (field[i] == CellDraw::CELL_DAMAGED ||
+            field[i] == CellDraw::CELL_DOT     ||
+            field[i] == CellDraw::CELL_KILLED    )
+        {
+            updatedField[i] = field[i];
+        }
+
+//        updatedField.push_back(resultingCell);
+    }
+
+    enemyField_->setDrawField(updatedField);
+}
+
+void Model::updateState(ModelState state)
+{
+    if (state == ST_GAME_NSTARTED)
+        qDebug() << "state updated to ST_GAME_NSTARTED";
+    else if (state == ST_PLACING_SHIPS)
+        qDebug() << "state updated to ST_PLACING_SHIPS";
+    else if (state == ST_WAITING_PLACING)
+        qDebug() << "state updated to ST_WAITING_PLACING";
+    else if (state == ST_MAKING_STEP)
+        qDebug() << "state updated to ST_MAKING_STEP";
+    else if (state == ST_WAITING_STEP)
+        qDebug() << "state updated to ST_WAITING_STEP";
+    else if (state == ST_GAME_FINISHED)
+        qDebug() << "state updated to ST_GAME_FINISHED";
+    else {}
+
     state_ = state;
+}
+
+void Model::switchStep()
+{
+    if (state_ == ST_MAKING_STEP)
+        updateState(ST_WAITING_STEP);
+
+    else if (state_ == ST_WAITING_STEP)
+        updateState(ST_MAKING_STEP);
 }
 
 void Model::setLogin(const QString& login)
@@ -62,37 +155,81 @@ QString Model::getLogin() const
     return login_;
 }
 
-bool Model::checkMyField() const
+int Model::getGameId() const
 {
-    // Check field for correct ship placement
-    return (shipNum(1) == 4 &&
-            shipNum(2) == 3 &&
-            shipNum(3) == 2 &&
-            shipNum(4) == 1   );
+//    if (state_ == ST_GAME_NSTARTED) return
+
+    return gameId_;
 }
 
-int Model::shipNum(int size) const  // checks the number of ships with <size> blocks
+bool Model::isMyFieldCorrect() const
 {
-    int shipNumber = 0;
+    return myField_->isCorrect();;
+}
 
-    int width  = myField_->getWidth();
-    int height = myField_->getHeight();
+void Model::startGame(QString enemy_login, int gameId)
+{
+    gameId_ = gameId;
+    enemyLogin_ = enemy_login;
+    // ToDO: ...
 
-    for(int i = 0; i < width; i++)
+    updateState(ST_PLACING_SHIPS);
+}
+
+void Model::finishGame()
+{
+    myField_->clear();
+    enemyField_->clear();
+
+    // TODO:
+
+    updateState(ST_GAME_FINISHED);
+
+    //
+
+    updateState(ST_GAME_NSTARTED);
+}
+
+void Model::startFight()
+{
+    qDebug() << "HERE!!!!!!!";
+
+    if (amIStarted_)
     {
-        for(int j = 0; j < height; j++)
-        {
-            if(isShip(size, i, j))
-                shipNumber++;
-        }
+        updateState(ST_MAKING_STEP);
+        qDebug() << "1st step is mine";
     }
 
-    return shipNumber;
+    else
+    {
+        updateState(ST_WAITING_STEP);
+        qDebug() << "1st step isn't mine";
+    }
+
+    // TODO:
 }
 
-bool Model::isShip(int size, int x, int y) const
+void Model::generateMyField()
 {
-    // TODO: implement function that checks if thats a ship with needed <size>
+    myField_->generate();
+}
 
-    return true;
+void Model::setStartedFlag(bool val)
+{
+    amIStarted_ = val;
+}
+
+bool Model::getStartedFlag()
+{
+    return amIStarted_;
+}
+
+void Model::setEnemyLogin(QString login)
+{
+    enemyLogin_ = login;
+}
+
+QString Model::getEnemyLogin()
+{
+    return enemyLogin_;
 }

@@ -1,6 +1,6 @@
-QT += core gui network
-
+QT += core gui network sql
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += multimedia
 
 CONFIG += c++11
 
@@ -11,20 +11,41 @@ CONFIG += c++11
 TARGET = client
 
 SOURCES += \
+    controller.cpp \
     field.cpp \
+    fightshistorywindow.cpp \
     images.cpp \
     main.cpp \
     mainwindow.cpp \
     model.cpp
 
 HEADERS += \
-    config.h \
-    field.h \
-    images.h \
-    mainwindow.h \
-    model.h
+    config.hpp \
+    constants.hpp \
+    controller.hpp \
+    field.hpp \
+    fightshistorywindow.h \
+    images.hpp \
+    mainwindow.hpp \
+    model.hpp
+
+# PlaySound utility
+HEADERS += util/PlaySound.h
+SOURCES += util/PlaySound.cpp
+
+CONFIG( unix ) {
+    LIBS += -lasound
+    SOURCES += util/PlaySound_nix.cpp
+    HEADERS += util/PlaySound_nix.h
+}
+
+CONFIG( windows ) {
+    SOURCES += util/PlaySound_win.cpp
+    HEADERS += util/PlaySound_win.h
+}
 
 FORMS += \
+    fightshistorywindow.ui \
     mainwindow.ui
 
 # Default rules for deployment.
@@ -33,4 +54,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    images.qrc
+    images.qrc \
+    sounds.qrc

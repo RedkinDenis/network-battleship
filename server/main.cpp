@@ -1,33 +1,17 @@
-/**
- * @file main.cpp
- * @brief Точка входа в серверное приложение
- * 
- * Этот файл содержит функцию main, которая является точкой входа
- * в серверное приложение. Она создает экземпляр QApplication,
- * инициализирует главное окно приложения и запускает цикл обработки событий.
- */
-
 #include <QApplication>
-#include "server.h"
-#include "mainwindow.h"
+#include "server.hpp"
+#include "mainwindow.hpp"
+#include "dbwindow.hpp"
 
-/**
- * @brief Точка входа в приложение
- * @param argc Количество аргументов командной строки
- * @param argv Массив аргументов командной строки
- * @return Код возврата приложения
- */
 int main(int argc, char *argv[])
 {
-    // Создаем экземпляр приложения Qt
-    QApplication a(argc, argv);
+    QApplication server(argc, argv);
 
-    // Создаем главное окно приложения с указанным портом сервера
-    MainWindow window(12345);
-    
-    // Отображаем главное окно
+    MainWindow window(50000);
+//    DBWindow dbWindow;
+
+//    dbWindow.show();
     window.show();
 
-    // Запускаем цикл обработки событий приложения
-    return a.exec();
+    return server.exec();
 }

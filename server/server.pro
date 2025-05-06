@@ -1,4 +1,4 @@
-QT += core gui network
+QT += core gui network sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,19 +14,26 @@ TARGET = server
 
 SOURCES += main.cpp \
     client.cpp \
+    dbcontroller.cpp \
+    dbwindow.cpp \
     field.cpp \
+    gamecontroller.cpp \
     mainwindow.cpp \
     server.cpp
 
 HEADERS += \
-    client.h \
-    config.h \
-    field.h \
-    mainwindow.h \
-    server.h
+    client.hpp \
+    config.hpp \
+    dbcontroller.hpp \
+    dbwindow.hpp \
+    field.hpp \
+    gamecontroller.hpp \
+    mainwindow.hpp \
+    server.hpp
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    dbwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -34,4 +41,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
+    database.qrc \
     images.qrc
+
+DISTFILES += \
+    placements.txt  \
+    data.db
