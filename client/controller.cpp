@@ -1,6 +1,23 @@
+/**
+ * @file controller.cpp
+ * @brief Реализация класса Controller для игры "Морской бой".
+ * 
+ * Этот файл содержит реализацию класса Controller, который обрабатывает пользовательский ввод,
+ * управляет игровыми событиями и координирует взаимодействие между Model и View компонентами.
+ * Обрабатывает события мыши, управляет звуковыми эффектами и переходами между состояниями игры.
+ */
+
 #include "controller.hpp"
 #include <QMouseEvent>
 
+/**
+ * @brief Конструктор.
+ * @param model Указатель на объект модели
+ * @param socket Указатель на сокет для сетевого взаимодействия
+ * 
+ * Инициализирует контроллер с указанными моделью и сокетом,
+ * устанавливает начальную громкость и загружает звуковые эффекты.
+ */
 Controller::Controller(Model* model, QTcpSocket* socket):
     model_(model),
     socket_(socket),
@@ -16,12 +33,25 @@ Controller::Controller(Model* model, QTcpSocket* socket):
     loadSounds();
 }
 
+/**
+ * @brief Деструктор.
+ * 
+ * Освобождает ресурсы, занятые звуковыми эффектами.
+ */
 Controller::~Controller()
 {
 //    backgroundMusicPlayer_->stop();
 //    delete backgroundMusicPlayer_;
 }
 
+/**
+ * @brief Преобразование координат мыши в координаты поля.
+ * @param pos Позиция мыши
+ * @param owner Владелец поля (MY_FIELD или ENEMY_FIELD)
+ * @return Координаты на поле или (-1, -1) если позиция вне поля
+ * 
+ * Преобразует координаты мыши в координаты на игровом поле с учетом смещения.
+ */
 QPoint getFieldCoord(const QPoint& pos, Field::Owner owner)
 {
     QPoint res;
@@ -55,6 +85,18 @@ QPoint getFieldCoord(const QPoint& pos, Field::Owner owner)
     return res;
 }
 
+/**
+ * @brief Обработка нажатия кнопки мыши.
+ * @param pos Позиция мыши
+ * @param event Событие мыши
+ * @param applyIsOkLabel Метка для отображения корректности размещения
+ * @param applyIsNotOkLabel Метка для отображения некорректности размещения
+ * @param applyFieldButton Кнопка подтверждения размещения
+ * 
+ * Обрабатывает нажатия кнопок мыши в зависимости от текущего состояния игры:
+ * - При размещении кораблей: левая кнопка - разместить корабль, правая - убрать
+ * - При ходе: левая кнопка - сделать выстрел, правая - поставить метку
+ */
 void Controller::onMousePressed(const QPoint& pos, QMouseEvent* event, QLabel* applyIsOkLabel, QLabel* applyIsNotOkLabel, QPushButton* applyFieldButton)
 {
     ModelState state = model_->getState();
@@ -238,6 +280,11 @@ void Controller::onMousePressed(const QPoint& pos, QMouseEvent* event, QLabel* a
 #define LOAD_SOUND_WAV(name_str) sounds_.insert(name_str, new PlaySound(":" SOUNDS_DIRECTORY_PATH name_str ".wav")); \
                                  qDebug() << name_str ".wav is loaded";
 
+/**
+ * @brief Загрузка звуковых эффектов.
+ * 
+ * Загружает все необходимые звуковые эффекты для игры.
+ */
 void Controller::loadSounds()
 {
     if (isLoaded_)
@@ -261,6 +308,13 @@ void Controller::loadSounds()
 
 #undef LOAD_SOUND_WAV
 
+/**
+ * @brief Воспроизведение звукового эффекта.
+ * @param sound_name Имя звукового эффекта
+ * 
+ * Воспроизводит указанный звуковой эффект.
+ * Выбрасывает исключение, если эффект не найден.
+ */
 void Controller::playSound(QString sound_name)
 {
     qDebug() << "Play sound: " << sound_name;
@@ -273,6 +327,13 @@ void Controller::playSound(QString sound_name)
     sndIt.value()->play();
 }
 
+/**
+ * @brief Остановка звукового эффекта.
+ * @param sound_name Имя звукового эффекта
+ * 
+ * Останавливает воспроизведение указанного звукового эффекта.
+ * Выбрасывает исключение, если эффект не найден.
+ */
 void Controller::stopSound(QString sound_name)
 {
     qDebug() << "Play sound: " << sound_name;
@@ -285,6 +346,12 @@ void Controller::stopSound(QString sound_name)
     sndIt.value()->stop();
 }
 
+/**
+ * @brief Обновление громкости.
+ * @param volume Новая громкость (0-100)
+ * 
+ * Устанавливает новую громкость для всех звуковых эффектов.
+ */
 void Controller::updateVolume(int volume)
 {
     if (volume < 0)
@@ -295,6 +362,12 @@ void Controller::updateVolume(int volume)
 //    soundPlayer_->setVolume(volume_);
 }
 
+/**
+ * @brief Обработка изменения состояния медиаплеера.
+ * @param status Новое состояние медиаплеера
+ * 
+ * Обрабатывает события изменения состояния медиаплеера.
+ */
 void Controller::on_mediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
 //    qDebug() << "end of the player_";
