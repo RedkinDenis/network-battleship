@@ -1,24 +1,9 @@
-/**
- * @file field.cpp
- * @brief Реализация класса Field для игры "Морской бой".
- * 
- * Этот файл содержит реализацию класса Field, который управляет состоянием игрового поля,
- * размещением кораблей и обработкой выстрелов. Класс является основным компонентом
- * для представления игрового поля и его логики.
- */
-
 #include <QPixmap>
 #include <QPainter>
 #include "field.hpp"
 #include "images.hpp"
 #include "qmath.h"
-#include <QDebug>
 
-/**
- * @brief Конструктор по умолчанию.
- * 
- * Инициализирует поле стандартного размера и очищает его.
- */
 Field::Field() :
     width_(FIELD_WIDTH_DEFAULT),
     height_(FIELD_HEIGHT_DEFAULT),
@@ -27,12 +12,6 @@ Field::Field() :
     clear();
 }
 
-/**
- * @brief Конструктор с параметром строки.
- * @param field Строка, представляющая начальное состояние поля
- * 
- * Инициализирует поле стандартного размера и устанавливает его состояние из строки.
- */
 Field::Field(QString field) :
     width_(FIELD_WIDTH_DEFAULT),
     height_(FIELD_HEIGHT_DEFAULT),
@@ -42,13 +21,6 @@ Field::Field(QString field) :
     setStateField(field);
 }
 
-/**
- * @brief Оператор присваивания.
- * @param other Поле, из которого копируются данные
- * @return Ссылка на текущий объект
- * 
- * Копирует все данные из другого поля в текущее.
- */
 Field& Field::operator=(const Field& other)
 {
     if (this == &other)
@@ -63,26 +35,12 @@ Field& Field::operator=(const Field& other)
     return *this;
 }
 
-/**
- * @brief Деструктор.
- * 
- * Очищает все векторы данных поля.
- */
 Field::~Field()
 {
     fieldState_.clear();
     fieldDraw_.clear();
 }
 
-/**
- * @brief Получение состояния ячейки для отображения.
- * @param x Координата X
- * @param y Координата Y
- * @return Состояние ячейки для отображения
- * 
- * Возвращает состояние ячейки для отображения по заданным координатам.
- * Если координаты некорректны, возвращает CELL_EMPTY.
- */
 CellDraw Field::getCell(int x, int y) const
 {
     if(x >= 0 && y >= 0 && x < width_ && y < height_)
@@ -94,15 +52,6 @@ CellDraw Field::getCell(int x, int y) const
     return CELL_EMPTY;
 }
 
-/**
- * @brief Установка состояния ячейки для отображения.
- * @param x Координата X
- * @param y Координата Y
- * @param cell Новое состояние ячейки
- * 
- * Устанавливает состояние ячейки для отображения по заданным координатам.
- * Если координаты некорректны, выводит сообщение об ошибке.
- */
 void Field::setDrawCell(int x, int y, CellDraw cell)
 {
     if(x >= 0 && y >= 0 && x < width_ && y < height_)
@@ -114,20 +63,14 @@ void Field::setDrawCell(int x, int y, CellDraw cell)
     qDebug() << "ERROR: no such cell (" << x << "," << y << ")";
 }
 
-/**
- * @brief Установка внутреннего состояния ячейки.
- * @param x Координата X
- * @param y Координата Y
- * @param cell Новое внутреннее состояние ячейки
- * 
- * Устанавливает внутреннее состояние ячейки по заданным координатам.
- * Если координаты некорректны, выводит сообщение об ошибке.
- */
 void Field::setStateCell(int x, int y, CellState cell)
 {
     if(x >= 0 && y >= 0 && x < width_ && y < height_)
     {
+//        qDebug() << (int)cell;
         fieldState_[width_*y+x] = cell;
+//        qDebug() << fieldState_[width_*y+x];
+//        qDebug() << "field after set: " << getStateFieldStr();
         return;
     }
 
@@ -138,6 +81,7 @@ void Field::setStateCell(int index_bordered, CellState cell)
 {
     if(index_bordered < (width_ + 2) * (height_ + 2))
     {
+//        fieldState_[index_bordered - 13 - 2*int(index_bordered/23)] = cell; // index out of range error
         return;
     }
 }
@@ -262,6 +206,8 @@ void Field::initMyDrawField()
 
         else
             fieldDraw_.push_back(CELL_LIVE);
+
+//        qDebug() << QString::number(i) + ": " << fieldDraw_[i];
     }
 }
 
@@ -293,6 +239,8 @@ QImage Field::getFieldImage()
     image.fill(0);  // empty image
     QPainter painter(&image);
 
+//    qDebug() << getFieldStr();
+
     double cfx = 1.0 * FIELD_IMG_WIDTH_DEFAULT /FIELD_WIDTH_DEFAULT ;
     double cfy = 1.0 * FIELD_IMG_HEIGHT_DEFAULT/FIELD_HEIGHT_DEFAULT;
 
@@ -310,30 +258,35 @@ QImage Field::getFieldImage()
             case CELL_DOT:
             {
                 painter.drawImage(x, y, pictures.get("dot"));
+//                qDebug() << "dot";
                 break;
             }
 
             case CELL_LIVE:
             {
                 painter.drawImage(x, y, pictures.get("live"));
+//                qDebug() << "live";
                 break;
             }
 
             case CELL_DAMAGED:
             {
                 painter.drawImage(x, y, pictures.get("damaged"));
+                //                qDebug() << "damaged";
                 break;
             }
 
             case CELL_KILLED:
             {
                 painter.drawImage(x, y, pictures.get("killed"));
+                //                qDebug() << "killed";
                 break;
             }
 
             case CELL_MARK:
             {
                 painter.drawImage(x, y+1, pictures.get("flag"));
+//                qDebug() << "mark";
                 break;
             }
 
@@ -420,6 +373,8 @@ int Field::shipNum(int size, const QVector<CellState>& fieldStateWithBorders)  /
     {
         for(int i = 0; i < height_+2; i++)
         {
+//            qDebug() << i << ":" << j;
+
             if(isShip(size, i, j, fieldStateWithBorders))
             {
                 shipNumber++;
@@ -440,6 +395,10 @@ bool Field::isShip(int size, int x, int y, const QVector<CellState>& fieldStateW
     int length = 0;
     int delta = 0;
 
+//    qDebug() << "index " << index;
+//    qDebug() << index << " : " << fieldStateWithBorders[index];
+
+
     if (fieldStateWithBorders[index] == CL_ST_TOP)
     {
         delta = width_+2;
@@ -451,6 +410,8 @@ bool Field::isShip(int size, int x, int y, const QVector<CellState>& fieldStateW
         {
             length++;
             index += delta;
+
+//            qDebug() << "index vertical: " << index;
         }
     }
 
@@ -465,6 +426,8 @@ bool Field::isShip(int size, int x, int y, const QVector<CellState>& fieldStateW
         {
             length++;
             index += delta;
+
+//            qDebug() << "index horizontal: " << index;
         }
     }
 
@@ -525,8 +488,12 @@ bool Field::CheckLength(QVector<CellState>& fieldStateWithBorders) // тут е�
             int index = (width_+2)*(i + 1) + (j+1);
             if(fieldStateWithBorders[index] == CL_ST_UNDEFINED)
             {
+//                qDebug() << "HERE1!";
+
                 if(fieldStateWithBorders[index+1] != CL_ST_EMPTY) //horizontal ship (go from left toright)
                 {
+//                    qDebug() << "HERE2!";
+
                     fieldStateWithBorders[index] = CL_ST_LEFT;
 
                     int length = 2;
@@ -586,15 +553,6 @@ bool Field::CheckLength(QVector<CellState>& fieldStateWithBorders) // тут е�
     return true;
 }
 
-/**
- * @brief Проверка корректности размещения кораблей.
- * @return true если размещение корректно, false в противном случае
- * 
- * Проверяет корректность размещения кораблей на поле согласно правилам игры:
- * - Корабли не должны соприкасаться
- * - Корабли должны быть размещены в пределах поля
- * - Количество кораблей каждого типа должно соответствовать правилам
- */
 bool Field::isCorrect()
 {
     qDebug() << "isCorrect() input field dump::";
@@ -608,6 +566,8 @@ bool Field::isCorrect()
         for(int j = 0; j < width_; j++)
         {
             fieldStateWithBorders[(width_+2)*(i+1)+(j+1)] = fieldState_[width_*i+j];
+//            qDebug() << "(" << (width_+2)*(i+1)+(j+1) << ") = " << fieldState_[width_*i+j];
+//            qDebug() << "(" << i << ", " << j << ") = " << fieldState_[width_*i+j];
         }
     }
 
@@ -627,6 +587,7 @@ bool Field::isCorrect()
     qDebug() << "Copied field dump after CheckLength():";
     printField(fieldStateWithBorders);
 
+//  Check field for correct ship placement
     return  (shipNum(1, fieldStateWithBorders) == SHIP1_NUM &&
              shipNum(2, fieldStateWithBorders) == SHIP2_NUM &&
              shipNum(3, fieldStateWithBorders) == SHIP3_NUM &&

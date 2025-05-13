@@ -1,11 +1,3 @@
-/**
- * @file mainwindow.hpp
- * @brief Главное окно клиентской части игры "Морской бой"
- * 
- * Этот класс реализует основное окно приложения, управляет пользовательским интерфейсом,
- * обработкой событий и взаимодействием с сервером.
- */
-
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -34,34 +26,19 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-/**
- * @brief Состояния подключения клиента
- */
-enum ClientConnectionState
+enum ClientConnectionState  // connection states of client
 {
-    ST_DISCONNECTED = 0,  ///< Клиент отключен
-    ST_CONNECTED       ,  ///< Клиент подключен
-    ST_AUTHORIZED      ,  ///< Клиент авторизован
+    ST_DISCONNECTED = 0,
+    ST_CONNECTED       ,
+    ST_AUTHORIZED      ,
     // more
 };
 
-/**
- * @brief Класс главного окна
- * 
- * Реализует основное окно приложения, управляет пользовательским интерфейсом,
- * обработкой событий и взаимодействием с сервером.
- */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    /**
-     * @brief Конструктор
-     * @param ip IP-адрес сервера
-     * @param port Порт сервера
-     * @param parent Родительский виджет
-     */
     MainWindow(QString ip, quint16 port, QWidget *parent = nullptr);
     ~MainWindow();
     void screenUpdate();
@@ -86,10 +63,6 @@ private:
     Controller* controller_;
 
 protected:
-    /**
-     * @brief Обработчик таймера
-     * @param event Событие таймера
-     */
     void timerEvent(QTimerEvent *event) override;
     void paintEvent(QPaintEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
@@ -158,9 +131,6 @@ private:
     QMap<QListWidgetItem*, QTextBrowser*> browserMap;   // map of the user logins and chats with them
 
 public:
-    /**
-     * @brief Состояния готовности к игре
-     */
     enum Readiness
     {
         ST_NREADY       = 0,
@@ -168,10 +138,6 @@ public:
         ST_PLAYING         ,
     };
 
-    /**
-     * @brief Обновить состояние готовности
-     * @param readiness Новое состояние
-     */
     void updateReadiness(MainWindow::Readiness readiness);
 
 private:
